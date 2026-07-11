@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>College &amp; Medical Program Explorer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-link active">Explorer</a>
+  <a href="compare.html" class="nav-link">Compare</a>
+</nav>
+
+<header class="site-header">
+  <h1>College &amp; Medical Program Explorer</h1>
+  <p class="subtitle">Scholarships, acceptance rates, deadlines, and special medical programs</p>
+  <p class="disclaimer">Figures are best-effort estimates gathered from public sources and change yearly — verify with each school's official site before relying on them.</p>
+</header>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search by school or program name..." />
+  <select id="typeFilter">
+    <option value="all">All types</option>
+    <option value="University">Universities</option>
+    <option value="Combined BS/MD Program">Combined BS/MD Programs</option>
+    <option value="Scholarship Program">Scholarship Programs</option>
+  </select>
+  <select id="sortBy">
+    <option value="name">Sort: Name (A–Z)</option>
+    <option value="acceptance">Sort: Acceptance Rate (lowest first)</option>
+  </select>
+</div>
+
+<main id="cardGrid" class="card-grid"></main>
+
+<p id="emptyState" class="empty-state" hidden>No schools match your search.</p>
+
+<footer class="site-footer">
+  <p>Built as a reference tool. Data last compiled: <span id="lastUpdated"></span>.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

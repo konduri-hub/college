@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>College Comparison</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-link">Explorer</a>
+  <a href="compare.html" class="nav-link active">Compare</a>
+</nav>
+
+<header class="site-header">
+  <h1>College Comparison</h1>
+  <p class="subtitle">Compare up to 5 colleges side by side across academics, admissions, and costs</p>
+  <p class="disclaimer">Figures are best-effort estimates gathered from public sources and change yearly — verify with each school's official site before relying on them.</p>
+</header>
+
+<div class="picker">
+  <input type="text" id="pickerSearch" placeholder="Search to add a school (up to 5)..." />
+  <div id="pickerResults" class="picker-results" hidden></div>
+  <div id="selectedChips" class="selected-chips"></div>
+</div>
+
+<main id="compareTableWrap" class="compare-table-wrap">
+  <p id="compareEmptyState" class="empty-state">Search above and pick up to 5 schools to compare.</p>
+</main>
+
+<footer class="site-footer">
+  <p>Built as a reference tool. Data last compiled: <span id="lastUpdated"></span>.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="compare.js"></script>
+</body>
+</html>
