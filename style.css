@@ -158,14 +158,35 @@ body {
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c) 1;
   border-radius: 12px;
   padding: 1.25rem;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .card:hover {
   background: var(--surface-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .card-top {
@@ -198,7 +219,8 @@ body {
   margin-top: 0.75rem;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: var(--accent-dim);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.15));
+  border-left: 3px solid #667eea;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -235,7 +257,7 @@ body {
 
 .card .acceptance-rate {
   font-weight: 700;
-  color: var(--accent);
+  color: #f093fb;
 }
 
 .card ul {
@@ -253,7 +275,7 @@ body {
 .card summary {
   cursor: pointer;
   font-size: 0.85rem;
-  color: var(--accent);
+  color: #667eea;
 }
 
 .source-links {
@@ -336,12 +358,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--accent-dim);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(240, 147, 251, 0.25));
   color: var(--text);
   border-radius: 999px;
   padding: 0.35rem 0.5rem 0.35rem 0.9rem;
   font-size: 0.85rem;
   font-weight: 600;
+  border: 1px solid rgba(102, 126, 234, 0.4);
 }
 
 .chip-remove {
@@ -386,7 +409,7 @@ body {
 }
 
 .compare-table thead th {
-  background: var(--surface-hover);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
   font-size: 0.95rem;
   min-width: 200px;
 }
@@ -399,7 +422,7 @@ body {
 }
 
 .compare-table .section-row td {
-  background: var(--accent-dim);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.15));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
