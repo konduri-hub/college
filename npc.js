@@ -4,10 +4,13 @@
 
   // Helpers
   function parseMoney(str) {
-    if (!str && str !== 0) return NaN;
+    // Extract the first numeric token like "92,042" or "92042.50" from strings such as "$92,042 (2025-26)"
     if (typeof str === "number") return str;
-    const s = String(str).replace(/[^0-9.\-]/g, "");
-    return s === "" ? NaN : parseFloat(s);
+    if (!str && str !== 0) return NaN;
+    const s = String(str);
+    const m = s.match(/(\d{1,3}(?:[,\d]*)(?:\.\d+)?)/);
+    if (!m) return NaN;
+    return parseFloat(m[1].replace(/,/g, ""));
   }
 
   function fmtMoney(n) {
@@ -106,13 +109,27 @@
   // apply persisted computed prices (so NPC page shows any previously-applied values immediately)
   function applyStoredToCollection() {
     const stored = loadStored();
+    const toDelete = [];
     Object.keys(stored).forEach((name) => {
       const entry = COLLEGES.find((c) => c.name === name);
       if (entry) {
-        entry.computedNetPrice = stored[name].computedNetPrice;
-        entry._computedNetPriceMeta = stored[name].meta;
+        const num = parseMoney(stored[name].computedNetPrice);
+        // sanitize obviously-bad stored values (e.g., numbers > $1,000,000)
+        if (!isFinite(num) || num > 1000000) {
+          toDelete.push(name);
+        } else {
+          entry.computedNetPrice = stored[name].computedNetPrice;
+          entry._computedNetPriceMeta = stored[name].meta;
+        }
+      } else {
+        // unknown college in storage — remove
+        toDelete.push(name);
       }
     });
+    if (toDelete.length) {
+      toDelete.forEach((k) => delete stored[k]);
+      saveStored(stored);
+    }
   }
 
   populateColleges();
