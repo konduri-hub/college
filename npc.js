@@ -1,5 +1,5 @@
 // npc.js — Net Price Calculator logic with localStorage persistence
-// Updated: prefer published average net price directly when available (option 1)
+// Updated: show both published average net price (when available) and an income-adjusted heuristic estimate
 (function () {
   const STORAGE_KEY = "npc_computed_v1";
 
@@ -44,44 +44,35 @@
 
     const publishedNet = parsePublishedNetPrice(college);
 
-    // Option 1: When a published average net price exists, use it directly (most transparent)
-    if (isFinite(publishedNet)) {
-      // Use published net price as the estimate, optionally subtract outside scholarships
-      const net = Math.max(0, Math.round(publishedNet - (outsideScholarships || 0)));
-      const baselineGrant = sticker - publishedNet; // informational
-      return {
-        method: "published-net-direct",
-        sticker,
-        publishedNet,
-        baselineGrant,
-        adjustedGrant: baselineGrant,
-        outsideScholarships,
-        net,
-        notes
-      };
-    }
+    // Heuristic: infer baseline grant. If published net exists, infer grant = sticker - publishedNet; otherwise use 20% baseline
+    const inferredBaselineGrant = isFinite(publishedNet) && publishedNet < sticker
+      ? Math.max(0, Math.round(sticker - publishedNet))
+      : Math.round(sticker * 0.20);
 
-    // Fallback: heuristic when published net price is not available
-    let baselineGrant = Math.round(sticker * 0.20);
-
+    // Income scaling
     const low = 50000, high = 200000;
     let scale = 1;
     if (income <= low) scale = 1;
     else if (income >= high) scale = 0.2;
     else scale = 1 - ((income - low) / (high - low)) * (1 - 0.2);
 
-    const adjustedGrant = Math.max(0, Math.round(baselineGrant * scale));
+    const adjustedGrant = Math.max(0, Math.round(inferredBaselineGrant * scale));
 
-    let net = Math.max(0, Math.round(sticker - adjustedGrant - outsideScholarships));
+    const heuristicNet = Math.max(0, Math.round(sticker - adjustedGrant - (outsideScholarships || 0)));
+
+    // Published-net direct (option 1): publishedNet minus outside scholarships (if published exists)
+    const publishedNetDirect = isFinite(publishedNet) ? Math.max(0, Math.round(publishedNet - (outsideScholarships || 0))) : NaN;
 
     return {
-      method: "heuristic",
       sticker,
-      publishedNet: NaN,
-      baselineGrant,
-      adjustedGrant,
-      outsideScholarships,
-      net,
+      publishedNet: isFinite(publishedNet) ? publishedNet : NaN,
+      publishedNetDirect,
+      heuristic: {
+        baselineGrant: inferredBaselineGrant,
+        adjustedGrant,
+        net: heuristicNet
+      },
+      outsideScholarships: outsideScholarships || 0,
       notes
     };
   }
@@ -175,19 +166,30 @@
     const lines = [];
     lines.push(`College: ${college.name}`);
     lines.push(`Sticker (estimated): ${fmtMoney(res.sticker)}`);
+
     if (isFinite(res.publishedNet)) {
-      lines.push(`Published average net price: ${fmtMoney(res.publishedNet)} (used directly as the estimate)`);
+      lines.push(`Published average net price (aggregate): ${fmtMoney(res.publishedNet)}`);
+      lines.push(`Published-net estimate (used directly): ${fmtMoney(res.publishedNetDirect)}`);
     } else {
-      lines.push("No published net-price available in data.");
+      lines.push("Published average net price: not available in data.");
     }
-    lines.push(`Inferred baseline institutional grant: ${fmtMoney(res.baselineGrant)}`);
-    if (res.method === "published-net-direct") {
-      lines.push(`Adjusted institutional grant (informational): ${fmtMoney(res.adjustedGrant)}`);
-    } else {
-      lines.push(`Adjusted institutional grant (by income): ${fmtMoney(res.adjustedGrant)}`);
-    }
+
+    lines.push("—— Heuristic (income-adjusted) estimate ——");
+    lines.push(`Inferred baseline institutional grant: ${fmtMoney(res.heuristic.baselineGrant)}`);
+    lines.push(`Adjusted institutional grant (by income): ${fmtMoney(res.heuristic.adjustedGrant)}`);
+    lines.push(`Heuristic estimated annual net price: ${fmtMoney(res.heuristic.net)}`);
+
     lines.push(`Outside scholarships you entered: ${fmtMoney(res.outsideScholarships)}`);
-    lines.push(`Estimated annual net price: ${fmtMoney(res.net)}`);
+
+    lines.push("—— Summary ——");
+    // Show both published-net-direct and heuristic if published exists; otherwise show heuristic only
+    if (isFinite(res.publishedNet)) {
+      lines.push(`Estimated net price (published average): ${fmtMoney(res.publishedNetDirect)}`);
+      lines.push(`Estimated net price (income-adjusted): ${fmtMoney(res.heuristic.net)}`);
+    } else {
+      lines.push(`Estimated net price (income-adjusted): ${fmtMoney(res.heuristic.net)}`);
+    }
+
     if (res.notes) lines.push(`Notes: ${res.notes}`);
 
     resultSummary.innerHTML = lines.join("\n");
@@ -200,14 +202,17 @@
     }
     const idx = lastCollegeIndex;
     const college = COLLEGES[idx];
-    const value = lastResult.net;
-    const formatted = fmtMoney(value);
+
+    // When published-net is available we keep existing behavior: apply the published-net-direct value.
+    // Fall back to the heuristic net when published net is not available.
+    const valueNum = isFinite(lastResult.publishedNetDirect) ? lastResult.publishedNetDirect : lastResult.heuristic.net;
+    const formatted = fmtMoney(valueNum);
 
     // update in-memory
     college.computedNetPrice = formatted;
     college._computedNetPriceMeta = {
       createdAt: new Date().toISOString(),
-      method: lastResult.method || "simple-estimate",
+      method: isFinite(lastResult.publishedNetDirect) ? "published-net-direct" : "heuristic",
       breakdown: lastResult
     };
 
