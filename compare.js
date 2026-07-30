@@ -1,3 +1,4 @@
+// Updated compare.js — prefer computedNetPrice (set by the NPC) when available
 const MAX_COMPARE = 5;
 let selected = [];
 
@@ -30,7 +31,8 @@ const SECTIONS = [
       { label: "Total yearly cost", get: (c) => c.compare?.totalYearlyCost },
       { label: "Scholarships", get: (c) => Array.isArray(c.scholarships) ? c.scholarships.join("; ") : c.scholarships },
       { label: "Financial aid", get: (c) => c.compare?.financialAid },
-      { label: "Net price", get: (c) => c.compare?.netPrice }
+      // prefer computedNetPrice when available (from the NPC); fall back to stored compare.netPrice
+      { label: "Net price", get: (c) => c.computedNetPrice || c.compare?.netPrice }
     ]
   }
 ];
