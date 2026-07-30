@@ -1,4 +1,5 @@
 // npc.js — Net Price Calculator logic with localStorage persistence
+// Updated: prefer published average net price directly when available (option 1)
 (function () {
   const STORAGE_KEY = "npc_computed_v1";
 
@@ -42,12 +43,26 @@
     if (!isFinite(sticker)) return { error: "Sticker price not available for this college." };
 
     const publishedNet = parsePublishedNetPrice(college);
-    let baselineGrant = 0;
-    if (isFinite(publishedNet) && publishedNet < sticker) {
-      baselineGrant = sticker - publishedNet;
-    } else {
-      baselineGrant = Math.round(sticker * 0.20);
+
+    // Option 1: When a published average net price exists, use it directly (most transparent)
+    if (isFinite(publishedNet)) {
+      // Use published net price as the estimate, optionally subtract outside scholarships
+      const net = Math.max(0, Math.round(publishedNet - (outsideScholarships || 0)));
+      const baselineGrant = sticker - publishedNet; // informational
+      return {
+        method: "published-net-direct",
+        sticker,
+        publishedNet,
+        baselineGrant,
+        adjustedGrant: baselineGrant,
+        outsideScholarships,
+        net,
+        notes
+      };
     }
+
+    // Fallback: heuristic when published net price is not available
+    let baselineGrant = Math.round(sticker * 0.20);
 
     const low = 50000, high = 200000;
     let scale = 1;
@@ -60,8 +75,9 @@
     let net = Math.max(0, Math.round(sticker - adjustedGrant - outsideScholarships));
 
     return {
+      method: "heuristic",
       sticker,
-      publishedNet,
+      publishedNet: NaN,
       baselineGrant,
       adjustedGrant,
       outsideScholarships,
@@ -156,16 +172,25 @@
       return;
     }
 
-    resultSummary.innerHTML = [
-      `College: ${college.name}`,
-      `Sticker (estimated): ${fmtMoney(res.sticker)}`,
-      res.publishedNet ? `Published average net price (if available): ${fmtMoney(res.publishedNet)}` : "No published net-price available in data.",
-      `Inferred baseline institutional grant: ${fmtMoney(res.baselineGrant)}`,
-      `Adjusted institutional grant (by income): ${fmtMoney(res.adjustedGrant)}`,
-      `Outside scholarships you entered: ${fmtMoney(res.outsideScholarships)}`,
-      `Estimated annual net price: ${fmtMoney(res.net)}`,
-      res.notes ? `Notes: ${res.notes}` : ""
-    ].filter(Boolean).join("\n");
+    const lines = [];
+    lines.push(`College: ${college.name}`);
+    lines.push(`Sticker (estimated): ${fmtMoney(res.sticker)}`);
+    if (isFinite(res.publishedNet)) {
+      lines.push(`Published average net price: ${fmtMoney(res.publishedNet)} (used directly as the estimate)`);
+    } else {
+      lines.push("No published net-price available in data.");
+    }
+    lines.push(`Inferred baseline institutional grant: ${fmtMoney(res.baselineGrant)}`);
+    if (res.method === "published-net-direct") {
+      lines.push(`Adjusted institutional grant (informational): ${fmtMoney(res.adjustedGrant)}`);
+    } else {
+      lines.push(`Adjusted institutional grant (by income): ${fmtMoney(res.adjustedGrant)}`);
+    }
+    lines.push(`Outside scholarships you entered: ${fmtMoney(res.outsideScholarships)}`);
+    lines.push(`Estimated annual net price: ${fmtMoney(res.net)}`);
+    if (res.notes) lines.push(`Notes: ${res.notes}`);
+
+    resultSummary.innerHTML = lines.join("\n");
   });
 
   applyBtn.addEventListener("click", () => {
@@ -182,7 +207,7 @@
     college.computedNetPrice = formatted;
     college._computedNetPriceMeta = {
       createdAt: new Date().toISOString(),
-      method: "simple-estimate",
+      method: lastResult.method || "simple-estimate",
       breakdown: lastResult
     };
 
