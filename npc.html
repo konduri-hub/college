@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Net Price Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* small page-specific tweaks */
+    .npc-wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .npc-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+    .npc-panel { background: #fff; padding: 16px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .npc-field { margin-bottom: 10px; }
+    .npc-field label { display:block; font-weight:600; margin-bottom:6px; }
+    .npc-small { font-size:0.95rem; color:#444; }
+    .npc-results { white-space:pre-wrap; font-family:monospace; }
+    button.primary { background:#0b66ff; color:#fff; border:0;padding:8px 12px;border-radius:6px; cursor:pointer; }
+    button.secondary { background:#f0f0f0; color:#111; border:0;padding:8px 12px;border-radius:6px; cursor:pointer; }
+    .muted { color:#666; font-size:0.95rem; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">Explorer</a>
+    <a href="compare.html" class="nav-link">Compare</a>
+    <a href="npc.html" class="nav-link active">Net Price Calculator</a>
+  </nav>
+
+  <header class="site-header">
+    <h1>Net Price Calculator</h1>
+    <p class="subtitle">Estimate an annual net price for any college listed in this site. These are rough estimates — verify on official financial aid pages.</p>
+  </header>
+
+  <div class="npc-wrap">
+    <div class="npc-grid">
+      <div class="npc-panel">
+        <div class="npc-field">
+          <label for="collegeSelect">Choose a college</label>
+          <select id="collegeSelect"></select>
+          <div class="muted">Selector is populated from the site's college data.</div>
+        </div>
+
+        <div class="npc-field">
+          <label for="residency">Residency</label>
+          <select id="residency">
+            <option value="default">Use college default / published sticker</option>
+            <option value="in-state">In-state</option>
+            <option value="out-of-state">Out-of-state</option>
+          </select>
+        </div>
+
+        <div class="npc-field">
+          <label for="income">Annual family income (USD)</label>
+          <input id="income" type="number" min="0" value="70000" />
+          <div class="muted">Enter household income used for need estimate.</div>
+        </div>
+
+        <div class="npc-field">
+          <label for="familySize">Family size</label>
+          <input id="familySize" type="number" min="1" value="4" />
+        </div>
+
+        <div class="npc-field">
+          <label for="outsideScholarships">Outside scholarships / awards (annual, USD)</label>
+          <input id="outsideScholarships" type="number" min="0" value="0" />
+          <div class="muted">Enter grants/scholarships not coming from the college (per year).</div>
+        </div>
+
+        <div class="npc-field">
+          <label for="notes">Notes (optional)</label>
+          <input id="notes" type="text" placeholder="e.g. expected merit award of $5,000" />
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button id="calcBtn" class="primary">Calculate</button>
+          <button id="applyBtn" class="secondary" title="Attach result to the college card (in-memory)">Apply to card</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+
+        <p class="muted" style="margin-top:12px;">
+          This tool uses the college sticker price present in the data and any published average net price to estimate an institutional grant, then adjusts that estimate by household income.
+        </p>
+      </div>
+
+      <aside class="npc-panel">
+        <h3>Result</h3>
+        <div id="resultSummary" class="npc-results">No calculation yet.</div>
+        <div style="margin-top:12px;">
+          <strong>Tip:</strong> After calculating, click "Apply to card" to show this estimated net price on the school's card and in the comparator.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="npc.js"></script>
+</body>
+</html>
