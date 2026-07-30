@@ -1,3 +1,4 @@
+// Updated script.js — small change: prefer entry.computedNetPrice when rendering cards
 function typeClass(type) {
   return type.toLowerCase().replace(/[^a-z]+/g, "-").replace(/(^-|-$)/g, "");
 }
@@ -29,6 +30,14 @@ function cardHTML(entry) {
        </div>`
     : "";
 
+  // New: prefer computedNetPrice (from NPC) and show it explicitly
+  const computedNetPriceHTML = entry.computedNetPrice
+    ? `<div class="field">
+         <div class="field-label">Estimated Net Price (calculator)</div>
+         <div class="field-value">${entry.computedNetPrice}</div>
+       </div>`
+    : (entry.compare?.netPrice ? `<div class="field"><div class="field-label">Net price</div><div class="field-value">${entry.compare.netPrice}</div></div>` : "");
+
   return `
   <article class="card" data-name="${entry.name.toLowerCase()}" data-type="${entry.type}">
     <div class="card-top">
@@ -49,6 +58,7 @@ function cardHTML(entry) {
       ${renderList(entry.scholarships)}
     </div>
     ${medSection}
+    ${computedNetPriceHTML}
     ${entry.topFactor ? `<div class="field"><div class="field-label">Why</div><div class="field-value">${entry.topFactor.note}</div></div>` : ""}
     ${sources ? `<details><summary>Sources</summary>${sources}</details>` : ""}
   </article>`;
